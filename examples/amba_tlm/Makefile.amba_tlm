@@ -1,0 +1,42 @@
+# Please provide SYSTEMC_INC, SYSTEMC_LIB, and TLM_INC
+# in the environment.
+
+# Flags that may be needed depending on how you've built
+# SystemC. -fpermissive is only needed for combinations of
+# newer compilers and SystemC 2.2
+# user would like to use, say, tlm_utils sockets.
+SYSTEMC_FLAGS = -pthread -fpermissive -DSC_INCLUDE_DYNAMIC_PROCESSES
+
+AMBA_TLM_HOME = ../..
+
+CXXFLAGS = -I$(AMBA_TLM_HOME)/include $(SYSTEMC_FLAGS) -I$(SYSTEMC_INC) -I$(TLM_INC)
+LDFLAGS = -L$(AMBA_TLM_HOME)/lib -L$(SYSTEMC_LIB)
+
+LIBS = -larmtlmaxi4 $(SYSTEMC_LIB_FILE)
+
+all: TrafficExample TransactorExample
+
+.cpp.o:
+	g++ $(CXXFLAGS) -c -o $@ $<
+
+Monitor.o: Monitor.cpp Monitor.h
+
+Memory.o: Memory.cpp Memory.h
+
+TrafficGenerator.o: TrafficGenerator.cpp TrafficGenerator.h
+
+Transactors.o: Transactors.cpp Transactors.h
+
+TrafficExample.o: TrafficExample.cpp Monitor.h Memory.o TrafficGenerator.h
+
+TransactorExample.o: TransactorExample.cpp Monitor.h Memory.o TrafficGenerator.h Transactors.h
+
+TrafficExample: Monitor.o Memory.o TrafficGenerator.o TrafficExample.o
+	g++ $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+TransactorExample: Monitor.o Memory.o TrafficGenerator.o Transactors.o TransactorExample.o
+	g++ $(CXXFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+clean:
+	rm -f *.o
+	rm -f TrafficExample
