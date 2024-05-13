@@ -14,4 +14,4 @@ conan_upload:
 	conan upload amba-tlm/* -r signature-local -c
 
 clean:
-	@rm -rf build CMakeUserPresets.json
+	@rm -rf build CMakeUserPresets.json test_package/build test_package/CMakeUserPresets.json
