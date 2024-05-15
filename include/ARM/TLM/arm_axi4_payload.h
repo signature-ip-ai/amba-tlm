@@ -823,7 +823,7 @@ public:
 
 /**
  * Base class of a PayloadExtensionManageer. This provides the functionality
- * of creating, copying and destroying extensions on payloads. The get_size 
+ * of creating, copying and destroying extensions on payloads. The get_size
  * function should return the size in memory the extension occupies.
  */
 class PayloadExtensionManager

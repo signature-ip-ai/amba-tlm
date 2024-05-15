@@ -3,16 +3,14 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
 class AmbaTlmRecipe(ConanFile):
     name = "amba-tlm"
-    version = "1.0"
+    version = "20190101"
 
-    # Optional metadata
-    license = ""
-    author = ""
+    license = "The Clear BSD License"
+    author = "Arm Limited (or its affiliates)"
     url = "http://gitlab.marqueesemi.com:8081/sw-tools/amba-tlm"
     description = "The Arm AMBA Transaction-Level Modeling (TLM) library allows you to model and simulate approximately-timed (AT) and cycle-accurate (CA) AXI4 and ACE ports"
-    topics = ("", "", "")
+    topics = ("AMBA ARM", "TLM", "AXI4", "SystemC")
 
-    # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
 
     options = {
@@ -25,7 +23,6 @@ class AmbaTlmRecipe(ConanFile):
         "fPIC": True
     }
 
-    # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*"
 
     def config_options(self):
