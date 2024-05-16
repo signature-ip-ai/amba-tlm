@@ -1,37 +1,37 @@
-//-------------------------------------------------------------------
-// The Clear BSD License
-//
-// Copyright (c) 2015-2019 Arm Limited.
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted (subject to the limitations in the disclaimer
-// below) provided that the following conditions are met:
-//
-//      * Redistributions of source code must retain the above copyright notice,
-//      this list of conditions and the following disclaimer.
-//
-//      * Redistributions in binary form must reproduce the above copyright
-//      notice, this list of conditions and the following disclaimer in the
-//      documentation and/or other materials provided with the distribution.
-//
-//      * Neither the name of the copyright holder nor the names of its
-//      contributors may be used to endorse or promote products derived from this
-//      software without specific prior written permission.
-//
-// NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-// THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-// IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//-------------------------------------------------------------------
+/*
+ * The Clear BSD License
+ *
+ * Copyright (c) 2015-2021 Arm Limited.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted (subject to the limitations in the disclaimer
+ * below) provided that the following conditions are met:
+ *
+ *      * Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *
+ *      * Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *
+ *      * Neither the name of the copyright holder nor the names of its
+ *      contributors may be used to endorse or promote products derived from
+ *      this software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+ * THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef ARM_TLM_SOCKET_H
 #define ARM_TLM_SOCKET_H
@@ -47,11 +47,11 @@ namespace TLM
 {
 
 template <typename Types>
-class BaseMasterSocket;
+class BaseInitiatorSocket;
 
-/** Base slave socket implementing protocol/width checking. */
+/** Base target socket implementing protocol/width checking. */
 template <typename Types>
-class BaseSlaveSocket : public tlm::tlm_target_socket<0, Types>
+class BaseTargetSocket : public tlm::tlm_target_socket<0, Types>
 {
 public:
     /* Protocol to test against other sockets when binding. */
@@ -61,7 +61,7 @@ public:
     const unsigned port_width;
 
 public:
-    BaseSlaveSocket(const char* name_,
+    BaseTargetSocket(const char* name_,
         Protocol protocol_, unsigned port_width_) :
         tlm::tlm_target_socket<0, Types>(name_),
         protocol(protocol_),
@@ -79,8 +79,8 @@ public:
         tlm::tlm_bw_transport_if<Types> > base_target_socket;
 
     /* Explicitly protocol checking version of bind. */
-    void protocol_check_bind(BaseSlaveSocket<Types>& socket);
-    void protocol_check_bind(BaseMasterSocket<Types>& socket);
+    void protocol_check_bind(BaseTargetSocket<Types>& socket);
+    void protocol_check_bind(BaseInitiatorSocket<Types>& socket);
 
     /*
      * Protocol checking overloadings of in TLM 2.0.2 (SystemC 2.3.0). In TLM
@@ -94,9 +94,9 @@ public:
     using tlm::tlm_target_socket<0, Types>::bind;
 };
 
-/** Base master socket implementing protocol/width checking. */
+/** Base initiator socket implementing protocol/width checking. */
 template <typename Types>
-class BaseMasterSocket : public tlm::tlm_initiator_socket<0, Types>
+class BaseInitiatorSocket : public tlm::tlm_initiator_socket<0, Types>
 {
 public:
     /* Protocol to test against other sockets when binding. */
@@ -106,7 +106,7 @@ public:
     const unsigned port_width;
 
 public:
-    BaseMasterSocket(const char* name_,
+    BaseInitiatorSocket(const char* name_,
         Protocol protocol_, unsigned port_width_) :
         tlm::tlm_initiator_socket<0, Types>(name_),
         protocol(protocol_),
@@ -124,8 +124,8 @@ public:
         tlm::tlm_bw_transport_if<Types> > base_target_socket;
 
     /* Explicitly protocol checking version of bind. */
-    void protocol_check_bind(BaseSlaveSocket<Types>& socket);
-    void protocol_check_bind(BaseMasterSocket<Types>& socket);
+    void protocol_check_bind(BaseTargetSocket<Types>& socket);
+    void protocol_check_bind(BaseInitiatorSocket<Types>& socket);
 
     /*
      * Protocol checking overloadings of in TLM 2.0.2 (SystemC 2.3.0). In TLM
@@ -140,44 +140,44 @@ public:
 };
 
 template <typename Types>
-void BaseSlaveSocket<Types>::protocol_check_bind(
-    BaseSlaveSocket<Types>& socket)
+void BaseTargetSocket<Types>::protocol_check_bind(
+    BaseTargetSocket<Types>& socket)
 {
     if (socket.protocol != protocol || socket.port_width != port_width)
     {
         std::ostringstream message;
         message << this->name() << ": Protocol/width mismatch on socket: "
-            << "(slave) "
+            << "(target) "
             << protocol << '/' << port_width
-            << " <-> (parent slave) "
+            << " <-> (parent target) "
             << socket.protocol << '/' << socket.port_width;
-        SC_REPORT_ERROR("/ARM/TLM/BaseSlaveSocket", message.str().c_str());
+        SC_REPORT_ERROR("/ARM/TLM/BaseTargetSocket", message.str().c_str());
     }
     tlm::tlm_target_socket<0, Types>::bind(socket);
 }
 
 template <typename Types>
-void BaseSlaveSocket<Types>::protocol_check_bind(
-    BaseMasterSocket<Types>& socket)
+void BaseTargetSocket<Types>::protocol_check_bind(
+    BaseInitiatorSocket<Types>& socket)
 {
     if (socket.protocol != protocol || socket.port_width != port_width)
     {
         std::ostringstream message;
         message << this->name() << ": Protocol/width mismatch on socket: "
-            << "(slave) "
+            << "(target) "
             << protocol << '/' << port_width
-            << " <-> (master) "
+            << " <-> (initiator) "
             << socket.protocol << '/' << socket.port_width;
-        SC_REPORT_ERROR("/ARM/TLM/BaseSlaveSocket", message.str().c_str());
+        SC_REPORT_ERROR("/ARM/TLM/BaseTargetSocket", message.str().c_str());
     }
     tlm::tlm_target_socket<0, Types>::bind(socket);
 }
 
 template <typename Types>
-void BaseSlaveSocket<Types>::bind(base_target_socket& socket)
+void BaseTargetSocket<Types>::bind(base_target_socket& socket)
 {
-    BaseSlaveSocket<Types>* arm_base =
-        dynamic_cast<BaseSlaveSocket<Types>*>(&socket);
+    BaseTargetSocket<Types>* arm_base =
+        dynamic_cast<BaseTargetSocket<Types>*>(&socket);
 
     if (arm_base)
         protocol_check_bind(*arm_base);
@@ -186,10 +186,10 @@ void BaseSlaveSocket<Types>::bind(base_target_socket& socket)
 }
 
 template <typename Types>
-void BaseSlaveSocket<Types>::bind(base_initiator_socket& socket)
+void BaseTargetSocket<Types>::bind(base_initiator_socket& socket)
 {
-    BaseMasterSocket<Types>* arm_base =
-        dynamic_cast<BaseMasterSocket<Types>*>(&socket);
+    BaseInitiatorSocket<Types>* arm_base =
+        dynamic_cast<BaseInitiatorSocket<Types>*>(&socket);
 
     if (arm_base)
         protocol_check_bind(*arm_base);
@@ -198,44 +198,44 @@ void BaseSlaveSocket<Types>::bind(base_initiator_socket& socket)
 }
 
 template <typename Types>
-void BaseMasterSocket<Types>::protocol_check_bind(
-    BaseSlaveSocket<Types>& socket)
+void BaseInitiatorSocket<Types>::protocol_check_bind(
+    BaseTargetSocket<Types>& socket)
 {
     if (socket.protocol != protocol || socket.port_width != port_width)
     {
         std::ostringstream message;
         message << this->name() << ": Protocol/width mismatch on socket: "
-            << "(master) "
+            << "(initiator) "
             << protocol << '/' << port_width
-            << " <-> (slave) "
+            << " <-> (target) "
             << socket.protocol << '/' << socket.port_width;
-        SC_REPORT_ERROR("/ARM/TLM/BaseMasterSocket", message.str().c_str());
+        SC_REPORT_ERROR("/ARM/TLM/BaseInitiatorSocket", message.str().c_str());
     }
     tlm::tlm_initiator_socket<0, Types>::bind(socket);
 }
 
 template <typename Types>
-void BaseMasterSocket<Types>::protocol_check_bind(
-    BaseMasterSocket<Types>& socket)
+void BaseInitiatorSocket<Types>::protocol_check_bind(
+    BaseInitiatorSocket<Types>& socket)
 {
     if (socket.protocol != protocol || socket.port_width != port_width)
     {
         std::ostringstream message;
         message << this->name() << ": Protocol/width mismatch on socket: "
-            << "(master) "
+            << "(initiator) "
             << protocol << '/' << port_width
-            << " <-> (parent master) "
+            << " <-> (parent initiator) "
             << socket.protocol << '/' << socket.port_width;
-        SC_REPORT_ERROR("/ARM/TLM/BaseMasterSocket", message.str().c_str());
+        SC_REPORT_ERROR("/ARM/TLM/BaseInitiatorSocket", message.str().c_str());
     }
     tlm::tlm_initiator_socket<0, Types>::bind(socket);
 }
 
 template <typename Types>
-void BaseMasterSocket<Types>::bind(base_target_socket& socket)
+void BaseInitiatorSocket<Types>::bind(base_target_socket& socket)
 {
-    BaseSlaveSocket<Types>* arm_base =
-        dynamic_cast<BaseSlaveSocket<Types>*>(&socket);
+    BaseTargetSocket<Types>* arm_base =
+        dynamic_cast<BaseTargetSocket<Types>*>(&socket);
 
     if (arm_base)
         protocol_check_bind(*arm_base);
@@ -244,10 +244,10 @@ void BaseMasterSocket<Types>::bind(base_target_socket& socket)
 }
 
 template <typename Types>
-void BaseMasterSocket<Types>::bind(base_initiator_socket& socket)
+void BaseInitiatorSocket<Types>::bind(base_initiator_socket& socket)
 {
-    BaseMasterSocket<Types>* arm_base =
-        dynamic_cast<BaseMasterSocket<Types>*>(&socket);
+    BaseInitiatorSocket<Types>* arm_base =
+        dynamic_cast<BaseInitiatorSocket<Types>*>(&socket);
 
     if (arm_base)
         protocol_check_bind(*arm_base);
@@ -256,12 +256,12 @@ void BaseMasterSocket<Types>::bind(base_initiator_socket& socket)
 }
 
 /**
- * Simple slave socket allowing a Module class to implement communication
+ * Simple target socket allowing a Module class to implement communication
  * functions as member functions and register them with the socket in the
  * same way at tlm_utils::simple_target_socket.
  */
 template <typename Module, typename Types>
-class SimpleSlaveSocket : public BaseSlaveSocket<Types>
+class SimpleTargetSocket : public BaseTargetSocket<Types>
 {
 protected:
     typedef typename Types::tlm_payload_type PayloadType;
@@ -280,29 +280,29 @@ protected:
     {
     public:
         /** Owner of the proxy. */
-        const SimpleSlaveSocket<Module, Types>& owner;
+        const SimpleTargetSocket<Module, Types>& owner;
 
         /** Object and functions to which to defer interface calls. */
         Module& t;
         NBFunc fw;
         DebugFunc dbg;
 
-        Proxy(const SimpleSlaveSocket<Module, Types>& owner_,
+        Proxy(const SimpleTargetSocket<Module, Types>& owner_,
             Module& t_, NBFunc fw_, DebugFunc dbg_) :
             owner(owner_), t(t_), fw(fw_), dbg(dbg_)
         {}
 
         tlm::tlm_sync_enum nb_transport_fw(PayloadType& trans,
-            PhaseType& phase, sc_core::sc_time& delay)
+            PhaseType& phase, sc_core::sc_time& /* delay */)
         {
             return (t.*fw)(trans, phase);
         }
 
-        void b_transport(PayloadType& trans, sc_core::sc_time& delay)
+        void b_transport(PayloadType&, sc_core::sc_time&)
         {
             std::ostringstream message;
             message << owner.name() << ": b_transport not implemented";
-            SC_REPORT_ERROR("/ARM/TLM/SimpleSlaveSocket",
+            SC_REPORT_ERROR("/ARM/TLM/SimpleTargetSocket",
                 message.str().c_str());
         }
 
@@ -323,9 +323,9 @@ protected:
     Proxy proxy;
 
 public:
-    SimpleSlaveSocket(const char* name_, Module& t, NBFunc fw,
-        Protocol protocol_, unsigned port_width_, DebugFunc dbg = NULL) :
-        BaseSlaveSocket<Types>(name_, protocol_, port_width_),
+    SimpleTargetSocket(const char* name_, Module& t, NBFunc fw,
+        Protocol protocol_, unsigned port_width_, DebugFunc dbg = nullptr) :
+        BaseTargetSocket<Types>(name_, protocol_, port_width_),
         proxy(*this, t, fw, dbg)
     {
         this->bind(proxy);
@@ -337,16 +337,15 @@ public:
         sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
         return (*this)->nb_transport_bw(trans, phase, delay);
     }
-
 };
 
 /**
- * Simple slave socket allowing a Module class to implement communication
+ * Simple target socket allowing a Module class to implement communication
  * functions as member functions and register them with the socket in the
  * same way at tlm_utils::simple_initiator_socket.
  */
 template <typename Module, typename Types>
-class SimpleMasterSocket : public BaseMasterSocket<Types>
+class SimpleInitiatorSocket : public BaseInitiatorSocket<Types>
 {
 protected:
     typedef typename Types::tlm_payload_type PayloadType;
@@ -362,19 +361,19 @@ protected:
     {
     public:
         /** Owner of the proxy. */
-        const SimpleMasterSocket<Module, Types>& owner;
+        const SimpleInitiatorSocket<Module, Types>& owner;
 
         /** Object and function(s) to which to defer interface calls. */
         Module& t;
         NBFunc bw;
 
-        Proxy(const SimpleMasterSocket<Module, Types>& owner_,
+        Proxy(const SimpleInitiatorSocket<Module, Types>& owner_,
             Module& t_, NBFunc bw_) :
             owner(owner_), t(t_), bw(bw_)
         {}
 
         tlm::tlm_sync_enum nb_transport_bw(PayloadType& trans,
-            PhaseType& phase, sc_core::sc_time& delay)
+            PhaseType& phase, sc_core::sc_time& /* delay */)
         {
             return (t.*bw)(trans, phase);
         }
@@ -383,7 +382,7 @@ protected:
         {
             std::ostringstream message;
             message << owner.name() << ": DMI not implemented";
-            SC_REPORT_ERROR("/ARM/TLM/SimpleMasterSocket",
+            SC_REPORT_ERROR("/ARM/TLM/SimpleInitiatorSocket",
                 message.str().c_str());
         }
     };
@@ -391,9 +390,9 @@ protected:
     Proxy proxy;
 
 public:
-    SimpleMasterSocket(const char* name_, Module& t, NBFunc bw,
+    SimpleInitiatorSocket(const char* name_, Module& t, NBFunc bw,
         Protocol protocol_, unsigned port_width_) :
-        BaseMasterSocket<Types>(name_, protocol_, port_width_),
+        BaseInitiatorSocket<Types>(name_, protocol_, port_width_),
         proxy(*this, t, bw)
     {
         tlm::tlm_initiator_socket<0, Types>::bind(proxy);
@@ -410,4 +409,4 @@ public:
 }
 }
 
-#endif // ARM_TLM_SOCKET_H
+#endif /* ARM_TLM_SOCKET_H */

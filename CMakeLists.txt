@@ -1,18 +1,32 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(armtlmaxi4 CXX)
+project(amba-tlm CXX)
 
-file(GLOB_RECURSE sources src/*.cpp)
-file(GLOB_RECURSE headers include/*.h)
+set(CUSTOM_CXX_FLAGS -static-libstdc++ -Wall -Werror)
 
-set(CUSTOM_CXX_FLAGS -static-libstdc++ -Wall -Werror -Wno-format -Wno-class-memaccess -Wno-error=unused-variable)
+########## Build Library: libarmtlmaxi4
+file(GLOB_RECURSE armtlmaxi4_sources src/libarmaxi4.cpp)
+file(GLOB_RECURSE armtlmaxi4_headers include/*arm_axi4*.h include/*arm_tlm*.h)
 
-########## Library
-add_library(${PROJECT_NAME})
-target_compile_options(${PROJECT_NAME} PRIVATE ${CUSTOM_CXX_FLAGS})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_sources(${PROJECT_NAME} PUBLIC ${sources})
+add_library(armtlmaxi4)
+target_compile_options(armtlmaxi4 PRIVATE ${CUSTOM_CXX_FLAGS})
+target_include_directories(armtlmaxi4 PUBLIC include)
+target_sources(armtlmaxi4 PUBLIC ${armtlmaxi4_sources})
 
-########## Install Package Library
-target_sources(${PROJECT_NAME} PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${headers})
-install(TARGETS ${PROJECT_NAME} FILE_SET HEADERS)
+########## Install Package Library: libarmtlmaxi4
+target_sources(armtlmaxi4 PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${armtlmaxi4_headers})
+install(TARGETS armtlmaxi4 FILE_SET HEADERS)
+
+
+########## Build Library: libarmtlmchi
+file(GLOB_RECURSE armtlmchi_sources src/libarmchi.cpp)
+file(GLOB_RECURSE armtlmchi_headers include/*arm_chi*.h include/*arm_tlm*.h)
+
+add_library(armtlmchi)
+target_compile_options(armtlmchi PRIVATE ${CUSTOM_CXX_FLAGS})
+target_include_directories(armtlmchi PUBLIC include)
+target_sources(armtlmchi PUBLIC ${armtlmchi_sources})
+
+########## Install Package Library: libarmtlmchi
+target_sources(armtlmchi PUBLIC FILE_SET HEADERS BASE_DIRS include FILES ${armtlmchi_headers})
+install(TARGETS armtlmchi FILE_SET HEADERS)

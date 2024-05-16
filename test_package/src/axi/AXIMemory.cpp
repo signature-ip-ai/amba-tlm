@@ -1,13 +1,8 @@
 #include <cstring>
 
-#include "Memory.h"
+#include "AXIMemory.h"
 
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
-using namespace ARM::AXI4;
-
-void Memory::clock_posedge()
+void AXIMemory::clock_posedge()
 {
     if (b_state == ACK)
         b_state = CLEAR;
@@ -36,7 +31,7 @@ void Memory::clock_posedge()
         aw_queue.pop_front();
         w_queue.pop_front();
 
-        b_outgoing->set_resp(RESP_OKAY);
+        b_outgoing->set_resp(ARM::AXI::RESP_OKAY);
 
         /* Write write data into backing store all in one go. */
         uint64_t addr = b_outgoing->get_base_address();
@@ -48,21 +43,21 @@ void Memory::clock_posedge()
     }
 }
 
-void Memory::clock_negedge()
+void AXIMemory::clock_negedge()
 {
     if (r_state == CLEAR && r_outgoing)
     {
-        Phase phase = R_VALID;
+        ARM::AXI::Phase phase = ARM::AXI::R_VALID;
 
         r_beat_count--;
         if (r_beat_count == 0)
-            phase = R_VALID_LAST;
+            phase = ARM::AXI::R_VALID_LAST;
 
         r_state = REQ;
-        tlm_sync_enum reply = slave.nb_transport_bw(*r_outgoing, phase);
-        if (reply == TLM_UPDATED)
+        tlm::tlm_sync_enum reply = target.nb_transport_bw(*r_outgoing, phase);
+        if (reply == tlm::TLM_UPDATED)
         {
-            sc_assert(phase == R_READY);
+            sc_assert(phase == ARM::AXI::R_READY);
             r_state = ACK;
         }
 
@@ -70,73 +65,73 @@ void Memory::clock_negedge()
         if (r_beat_count == 0)
         {
             r_outgoing->unref();
-            r_outgoing = NULL;
+            r_outgoing = nullptr;
         }
     }
 
     if (b_outgoing)
     {
-        Phase phase = B_VALID;
+        ARM::AXI::Phase phase = ARM::AXI::B_VALID;
 
         b_state = REQ;
-        tlm_sync_enum reply = slave.nb_transport_bw(*b_outgoing, phase);
-        if (reply == TLM_UPDATED)
+        tlm::tlm_sync_enum reply = target.nb_transport_bw(*b_outgoing, phase);
+        if (reply == tlm::TLM_UPDATED)
         {
-            sc_assert(phase == B_READY);
+            sc_assert(phase == ARM::AXI::B_READY);
             b_state = ACK;
         }
 
         /* Unref for a aw_queue.push_back() ref. */
         b_outgoing->unref();
-        b_outgoing = NULL;
+        b_outgoing = nullptr;
     }
 }
 
-tlm_sync_enum Memory::nb_transport_fw(Payload& payload, Phase& phase)
+tlm::tlm_sync_enum AXIMemory::nb_transport_fw(ARM::AXI::Payload& payload, ARM::AXI::Phase& phase)
 {
     switch (phase)
     {
-    case AW_VALID:
+    case ARM::AXI::AW_VALID:
         aw_queue.push_back(&payload);
         payload.ref();
-        phase = AW_READY;
-        return TLM_UPDATED;
-    case W_VALID_LAST:
+        phase = ARM::AXI::AW_READY;
+        return tlm::TLM_UPDATED;
+    case ARM::AXI::W_VALID_LAST:
         w_queue.push_back(&payload);
         payload.ref();
-        phase = W_READY;
-        return TLM_UPDATED;
-    case W_VALID:
-        phase = W_READY;
-        return TLM_UPDATED;
-    case B_READY:
+        phase = ARM::AXI::W_READY;
+        return tlm::TLM_UPDATED;
+    case ARM::AXI::W_VALID:
+        phase = ARM::AXI::W_READY;
+        return tlm::TLM_UPDATED;
+    case ARM::AXI::B_READY:
         b_state = ACK;
-        return TLM_ACCEPTED;
-    case AR_VALID:
+        return tlm::TLM_ACCEPTED;
+    case ARM::AXI::AR_VALID:
         ar_queue.push_back(&payload);
         payload.ref();
-        phase = AR_READY;
-        return TLM_UPDATED;
-    case R_READY:
+        phase = ARM::AXI::AR_READY;
+        return tlm::TLM_UPDATED;
+    case ARM::AXI::R_READY:
         r_state = ACK;
-        return TLM_ACCEPTED;
-    case RACK:
-    case WACK:
-        return TLM_ACCEPTED;
+        return tlm::TLM_ACCEPTED;
+    case ARM::AXI::RACK:
+    case ARM::AXI::WACK:
+        return tlm::TLM_ACCEPTED;
     default:
-        sc_assert(!"Unrecognised phase");
-        return TLM_ACCEPTED;
+        SC_REPORT_ERROR(name(), "unrecognised phase");
+        return tlm::TLM_ACCEPTED;
     }
 }
 
-Memory::Memory(sc_module_name name) :
-    sc_module(name),
+AXIMemory::AXIMemory(sc_core::sc_module_name name) :
+    sc_core::sc_module(name),
     b_state(CLEAR),
     r_state(CLEAR),
-    b_outgoing(NULL),
-    r_outgoing(NULL),
-    slave("slave", *this, &Memory::nb_transport_fw,
-          ARM::TLM::PROTOCOL_ACE, 128),
+    b_outgoing(nullptr),
+    r_outgoing(nullptr),
+    target("target", *this, &AXIMemory::nb_transport_fw,
+        ARM::TLM::PROTOCOL_ACE, 128),
     clock("clock")
 {
     memset(mem_data, 0xdf, MEMORY_SIZE);

@@ -29,7 +29,7 @@ class AmbaTlmDemoRecipe(ConanFile):
 
     def requirements(self):
         self.requires("systemc/2.3.3")
-        self.requires("amba-tlm/1.0")
+        self.requires("amba-tlm/20230601")
 
     def build_requirements(self):
         self.tool_requires("cmake/3.27.6")
@@ -44,8 +44,11 @@ class AmbaTlmDemoRecipe(ConanFile):
 
     def test(self):
         if can_run(self):
-            cmd = os.path.join(self.cpp.build.bindir, "TrafficExample")
+            cmd = os.path.join(self.cpp.build.bindir, "AXITrafficExample")
             self.run(cmd, env="conanrun")
 
-            cmd = os.path.join(self.cpp.build.bindir, "TransactorExample")
+            cmd = os.path.join(self.cpp.build.bindir, "AXITransactorExample")
+            self.run(cmd, env="conanrun")
+
+            cmd = os.path.join(self.cpp.build.bindir, "CHITrafficExample")
             self.run(cmd, env="conanrun")

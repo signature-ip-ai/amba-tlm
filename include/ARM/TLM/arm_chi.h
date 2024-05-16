@@ -33,11 +33,11 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ARM_AXI4_H
-#define ARM_AXI4_H
+#ifndef ARM_CHI_H
+#define ARM_CHI_H
 
-#include "arm_axi4_payload.h"
-#include "arm_axi4_phase.h"
-#include "arm_axi4_socket.h"
+#include "arm_chi_payload.h"
+#include "arm_chi_phase.h"
+#include "arm_chi_socket.h"
 
-#endif /* ARM_AXI4_H */
+#endif /* ARM_CHI_H */

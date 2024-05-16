@@ -33,11 +33,63 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ARM_AXI4_H
-#define ARM_AXI4_H
+#ifndef ARM_CHI_SOCKET_H
+#define ARM_CHI_SOCKET_H
 
-#include "arm_axi4_payload.h"
-#include "arm_axi4_phase.h"
-#include "arm_axi4_socket.h"
+#include <ARM/TLM/arm_tlm_socket.h>
 
-#endif /* ARM_AXI4_H */
+#include "arm_chi_payload.h"
+#include "arm_chi_phase.h"
+
+namespace ARM
+{
+namespace CHI
+{
+
+/**
+ * Payload and Phase grouped for use with socket templates in a
+ * similar way to tlm::tlm_base_protocol_types.
+ */
+class ProtocolType
+{
+public:
+    typedef Payload tlm_payload_type;
+    typedef Phase tlm_phase_type;
+};
+
+/** ARM::TLM::SimpleInitiatorSocket specialised for CHI payloads/phases. */
+template <typename Module, typename Types = ProtocolType>
+class SimpleInitiatorSocket : public ARM::TLM::SimpleInitiatorSocket <Module, Types>
+{
+private:
+    typedef typename ARM::TLM::SimpleInitiatorSocket<Module, Types> BaseType;
+
+public:
+    SimpleInitiatorSocket(const char* name_, Module& t,
+        typename BaseType::NBFunc bw,
+        TLM::Protocol protocol_, unsigned width_) :
+        TLM::SimpleInitiatorSocket <Module, Types>(name_, t, bw, protocol_, width_)
+    {}
+};
+
+/** ARM::TLM::SimpleTargetSocket specialised for CHI payloads/phases. */
+template <typename Module, typename Types = ProtocolType>
+class SimpleTargetSocket : public ARM::TLM::SimpleTargetSocket<Module, Types>
+{
+private:
+    typedef typename ARM::TLM::SimpleTargetSocket<Module, Types> BaseType;
+
+public:
+    SimpleTargetSocket(const char* name_, Module& t,
+        typename BaseType::NBFunc fw,
+        TLM::Protocol protocol_, unsigned width_,
+        typename BaseType::DebugFunc dbg = nullptr) :
+        TLM::SimpleTargetSocket <Module, Types>(name_, t, fw,
+            protocol_, width_, dbg)
+    {}
+};
+
+}
+}
+
+#endif /* ARM_CHI_SOCKET */

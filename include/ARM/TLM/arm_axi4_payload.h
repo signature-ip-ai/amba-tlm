@@ -1,37 +1,37 @@
-//-------------------------------------------------------------------
-// The Clear BSD License
-//
-// Copyright (c) 2015-2019 Arm Limited.
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted (subject to the limitations in the disclaimer
-// below) provided that the following conditions are met:
-//
-//      * Redistributions of source code must retain the above copyright notice,
-//      this list of conditions and the following disclaimer.
-//
-//      * Redistributions in binary form must reproduce the above copyright
-//      notice, this list of conditions and the following disclaimer in the
-//      documentation and/or other materials provided with the distribution.
-//
-//      * Neither the name of the copyright holder nor the names of its
-//      contributors may be used to endorse or promote products derived from this
-//      software without specific prior written permission.
-//
-// NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
-// THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
-// CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-// BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-// IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-// POSSIBILITY OF SUCH DAMAGE.
-//-------------------------------------------------------------------
+/*
+ * The Clear BSD License
+ *
+ * Copyright (c) 2015-2021 Arm Limited.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted (subject to the limitations in the disclaimer
+ * below) provided that the following conditions are met:
+ *
+ *      * Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *
+ *      * Redistributions in binary form must reproduce the above copyright
+ *      notice, this list of conditions and the following disclaimer in the
+ *      documentation and/or other materials provided with the distribution.
+ *
+ *      * Neither the name of the copyright holder nor the names of its
+ *      contributors may be used to endorse or promote products derived from
+ *      this software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY
+ * THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+ * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+ * NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef ARM_AXI4_PAYLOAD_H
 #define ARM_AXI4_PAYLOAD_H
@@ -44,12 +44,17 @@
 
 namespace ARM
 {
+/** AMBA AXI protocol support. */
 namespace AXI4
 {
 
 #define ARM_AXI4_TLM_API_VERSION ARM_AXI4_TLM_API_1
 struct ARM_AXI4_TLM_API_VERSION{ARM_AXI4_TLM_API_VERSION();};
 static ARM_AXI4_TLM_API_VERSION api_version_check;
+
+#define ARM_AXI_TLM_PAYLOAD_HAS_ISSUE_H_FIELDS 1
+struct ARM_AXI_TLM_PAYLOAD_SUPPORTS_ISSUE_H{ARM_AXI_TLM_PAYLOAD_SUPPORTS_ISSUE_H();};
+static ARM_AXI_TLM_PAYLOAD_SUPPORTS_ISSUE_H arm_axi_tlm_payload_supports_issue_h;
 
 class PayloadExtensionManager;
 
@@ -62,7 +67,9 @@ enum CommandEnum
 {
     COMMAND_READ  = 0,
     COMMAND_WRITE = 1,
-    COMMAND_SNOOP = 2
+    COMMAND_SNOOP = 2,
+
+    COMMAND_MASK = 0xFF
 };
 
 /**
@@ -79,7 +86,9 @@ enum SizeEnum
     SIZE_16  = 4,
     SIZE_32  = 5,
     SIZE_64  = 6,
-    SIZE_128 = 7
+    SIZE_128 = 7,
+
+    SIZE_MASK = 0xFF
 };
 
 /** AXI4 BURST field with the same element values as AXI4. */
@@ -87,7 +96,9 @@ enum BurstEnum
 {
     BURST_FIXED = 0,
     BURST_INCR  = 1,
-    BURST_WRAP  = 2
+    BURST_WRAP  = 2,
+
+    BURST_MASK = 0xFF
 };
 
 /** AXI4 LOCK field with the same element values as AXI4. */
@@ -95,7 +106,9 @@ enum LockEnum
 {
     LOCK_NORMAL    = 0,
     LOCK_EXCLUSIVE = 1,
-    LOCK_LOCKED    = 2 /* AXI3 only. */
+    LOCK_LOCKED    = 2, /* AXI3 only. */
+
+    LOCK_MASK = 0xFF
 };
 
 /**
@@ -147,6 +160,18 @@ enum CacheEnum
     CACHE_AR_OA_A_M_NB    = 0xE,
     CACHE_AR_OA_A_M_B     = 0xF,
 
+    /** For both. */
+    CACHE_NA_NOA_NM_NB    = 0x0,
+    CACHE_NA_NOA_NM_B     = 0x1,
+    CACHE_NA_NOA_M_NB     = 0x2,
+    CACHE_NA_NOA_M_B      = 0x3,
+    CACHE_A_OA_NM_NB      = 0xC,
+    CACHE_A_OA_NM_B       = 0xD,
+    CACHE_A_OA_M_NB       = 0xE,
+    CACHE_A_OA_M_B        = 0xF,
+
+    CACHE_MASK = 0xFF,
+
     /** Cache values based on named memory types. */
 
     /** For writes. */
@@ -175,7 +200,13 @@ enum CacheEnum
     CACHE_AR_WRITE_BACK_NA     = CACHE_AR_OA_NA_M_B,    /* 0xB */
     CACHE_AR_WRITE_BACK_RA     = CACHE_AR_OA_A_M_B,     /* 0xF */
     CACHE_AR_WRITE_BACK_WA     = CACHE_AR_OA_NA_M_B,    /* 0xB */
-    CACHE_AR_WRITE_BACK_RWA    = CACHE_AR_OA_A_M_B      /* 0xF */
+    CACHE_AR_WRITE_BACK_RWA    = CACHE_AR_OA_A_M_B,     /* 0xF */
+
+    /** For both. */
+    CACHE_DEVICE_NB            = CACHE_NA_NOA_NM_NB,    /* 0x0 */
+    CACHE_DEVICE_B             = CACHE_NA_NOA_NM_B,     /* 0x1 */
+    CACHE_NORMAL_NC_NB         = CACHE_NA_NOA_M_NB,     /* 0x2 */
+    CACHE_NORMAL_NC_B          = CACHE_NA_NOA_M_B       /* 0x3 */
 };
 
 /** Bit flags within CacheEnum. */
@@ -191,7 +222,9 @@ enum CacheBitEnum
     CACHE_AR_OA = 8, /* Read: 'other' (i.e. write) allocate */
     CACHE_AR_A  = 4, /* Read: read allocate */
     CACHE_AR_M  = 2, /* Read: modifiable */
-    CACHE_AR_B  = 1  /* Read: bufferable */
+    CACHE_AR_B  = 1, /* Read: bufferable */
+
+    CACHE_BIT_MASK = 0xFF
 };
 
 /**
@@ -207,7 +240,9 @@ enum ProtEnum
     PROT_I_S_UP  = 4,
     PROT_I_S_P   = 5,
     PROT_I_NS_UP = 6,
-    PROT_I_NS_P  = 7
+    PROT_I_NS_P  = 7,
+
+    PROT_MASK = 0xFF
 };
 
 /** Bit flags within ProtEnum. */
@@ -215,7 +250,9 @@ enum ProtBitEnum
 {
     PROT_P  = 1, /* Privileged */
     PROT_NS = 2, /* Not secure */
-    PROT_I  = 4  /* Instruction fetch */
+    PROT_I  = 4, /* Instruction fetch */
+
+    PROT_BIT_MASK = 0xFF
 };
 
 /**
@@ -224,16 +261,20 @@ enum ProtBitEnum
  */
 enum RespEnum
 {
-    RESP_OKAY   = 0,
-    RESP_EXOKAY = 1,
-    RESP_SLVERR = 2,
-    RESP_DECERR = 3,
+    RESP_OKAY       = 0,
+    RESP_EXOKAY     = 1,
+    RESP_SLVERR     = 2,
+    RESP_DECERR     = 3,
+    RESP_PREFETCHED = 4,
+    RESP_TRANSFAULT = 5,
 
     /**
      * Extra element (not found in AXI) to mark transaction responses where the
      * individual beat responses are not consistent with each other.
      */
-    RESP_INCONSISTENT = 0x80
+    RESP_INCONSISTENT = 0x80,
+
+    RESP_MASK = 0xFF
 };
 
 /** Bit fields within RESP. */
@@ -244,6 +285,8 @@ enum RespBitEnum
     RESP_DIRTY         = 0x04,
     RESP_SHARED        = 0x08,
     RESP_WAS_UNIQUE    = 0x10,
+
+    RESP_BIT_MASK = 0xFF,
 
     /**
      * A mask useful for extracting (using Resp::mask) the non-ACE response
@@ -258,7 +301,9 @@ enum DomainEnum
     DOMAIN_NSH = 0,
     DOMAIN_ISH = 1,
     DOMAIN_OSH = 2,
-    DOMAIN_SYS = 3
+    DOMAIN_SYS = 3,
+
+    DOMAIN_MASK = 0xFF
 };
 
 /** AXI4 BAR field with the same element values as AXI4. */
@@ -267,7 +312,20 @@ enum BarEnum
     BAR_NORM   = 0,
     BAR_MEMBAR = 1,
     BAR_IGNORE = 2,
-    BAR_SYNC   = 3
+    BAR_SYNC   = 3,
+
+    BAR_MASK = 0xFF
+};
+
+/** AXI5 Issue G CMO field with the same element values as AXI5. */
+enum CmoEnum
+{
+    CMO_CLEAN_INVALID             = 0,
+    CMO_CLEAN_SHARED              = 1,
+    CMO_CLEAN_SHARED_PERSIST      = 2,
+    CMO_CLEAN_SHARED_DEEP_PERSIST = 3,
+
+    CMO_MASK = 0xFF
 };
 
 /** AXI4 SNOOP field with the same element values as AXI4. */
@@ -276,17 +334,25 @@ enum SnoopEnum
     /** Write snoop requests. */
     SNOOP_AW_WRITE_NO_SNOOP          = 0x0,
     SNOOP_AW_WRITE_UNIQUE            = 0x0,
+    SNOOP_AW_WRITE_UNIQUE_PTL        = 0x0,
     SNOOP_AW_BARRIER                 = 0x0,
+    SNOOP_AW_ATOMIC                  = 0x0,
     SNOOP_AW_WRITE_LINE_UNIQUE       = 0x1,
+    SNOOP_AW_WRITE_UNIQUE_FULL       = 0x1,
     SNOOP_AW_WRITE_CLEAN             = 0x2,
     SNOOP_AW_WRITE_BACK              = 0x3,
     SNOOP_AW_EVICT                   = 0x4,
     SNOOP_AW_WRITE_EVICT             = 0x5,
+    SNOOP_AW_CMO                     = 0x6,
+    SNOOP_AW_WRITE_ZERO              = 0x7,
     SNOOP_AW_WRITE_UNIQUE_PTL_STASH  = 0x8,
     SNOOP_AW_WRITE_UNIQUE_FULL_STASH = 0x9,
+    SNOOP_AW_WRITE_PTL_CMO           = 0xA,
+    SNOOP_AW_WRITE_FULL_CMO          = 0xB,
     SNOOP_AW_STASH_ONCE_SHARED       = 0xC,
     SNOOP_AW_STASH_ONCE_UNIQUE       = 0xD,
-    SNOOP_AW_STASH_TRANSACTION       = 0xE,
+    SNOOP_AW_STASH_TRANSLATION       = 0xE,
+    SNOOP_AW_PREFETCH                = 0xF,
 
     /** Read snoop requests. */
     SNOOP_AR_READ_NO_SNOOP           = 0x0,
@@ -317,60 +383,88 @@ enum SnoopEnum
     SNOOP_AC_CLEAN_INVALID           = 0x9,
     SNOOP_AC_MAKE_INVALID            = 0xD,
     SNOOP_AC_DVM_COMPLETE            = 0xE,
-    SNOOP_AC_DVM_MESSAGE             = 0xF
+    SNOOP_AC_DVM_MESSAGE             = 0xF,
+
+    SNOOP_MASK = 0xFF
 };
 
 /** AXI4 ATOP field with the same element values as AXI4. */
 enum AtopEnum
 {
-    ATOP_NON_ATOMIC        = 0x0,
+    ATOP_NON_ATOMIC    = 0x0,
 
-    ATOP_STORE_ADD         = 0x10,
-    ATOP_STORE_CLR         = 0x11,
-    ATOP_STORE_EOR         = 0x12,
-    ATOP_STORE_SET         = 0x13,
-    ATOP_STORE_SMAX        = 0x14,
-    ATOP_STORE_SMIN        = 0x15,
-    ATOP_STORE_UMAX        = 0x16,
-    ATOP_STORE_UMIN        = 0x17,
+    ATOP_STORE_ADD     = 0x10,
+    ATOP_STORE_CLR     = 0x11,
+    ATOP_STORE_EOR     = 0x12,
+    ATOP_STORE_SET     = 0x13,
+    ATOP_STORE_SMAX    = 0x14,
+    ATOP_STORE_SMIN    = 0x15,
+    ATOP_STORE_UMAX    = 0x16,
+    ATOP_STORE_UMIN    = 0x17,
 
-    ATOP_STORE_ADD_BE      = 0x18,
-    ATOP_STORE_CLR_BE      = 0x19,
-    ATOP_STORE_EOR_BE      = 0x1A,
-    ATOP_STORE_SET_BE      = 0x1B,
-    ATOP_STORE_SMAX_BE     = 0x1C,
-    ATOP_STORE_SMIN_BE     = 0x1D,
-    ATOP_STORE_UMAX_BE     = 0x1E,
-    ATOP_STORE_UMIN_BE     = 0x1F,
+    ATOP_STORE_ADD_BE  = 0x18,
+    ATOP_STORE_CLR_BE  = 0x19,
+    ATOP_STORE_EOR_BE  = 0x1A,
+    ATOP_STORE_SET_BE  = 0x1B,
+    ATOP_STORE_SMAX_BE = 0x1C,
+    ATOP_STORE_SMIN_BE = 0x1D,
+    ATOP_STORE_UMAX_BE = 0x1E,
+    ATOP_STORE_UMIN_BE = 0x1F,
 
-    ATOP_LOAD_ADD          = 0x20,
-    ATOP_LOAD_CLR          = 0x21,
-    ATOP_LOAD_EOR          = 0x22,
-    ATOP_LOAD_SET          = 0x23,
-    ATOP_LOAD_SMAX         = 0x24,
-    ATOP_LOAD_SMIN         = 0x25,
-    ATOP_LOAD_UMAX         = 0x26,
-    ATOP_LOAD_UMIN         = 0x27,
+    ATOP_LOAD_ADD      = 0x20,
+    ATOP_LOAD_CLR      = 0x21,
+    ATOP_LOAD_EOR      = 0x22,
+    ATOP_LOAD_SET      = 0x23,
+    ATOP_LOAD_SMAX     = 0x24,
+    ATOP_LOAD_SMIN     = 0x25,
+    ATOP_LOAD_UMAX     = 0x26,
+    ATOP_LOAD_UMIN     = 0x27,
 
-    ATOP_LOAD_ADD_BE       = 0x28,
-    ATOP_LOAD_CLR_BE       = 0x29,
-    ATOP_LOAD_EOR_BE       = 0x2A,
-    ATOP_LOAD_SET_BE       = 0x2B,
-    ATOP_LOAD_SMAX_BE      = 0x2C,
-    ATOP_LOAD_SMIN_BE      = 0x2D,
-    ATOP_LOAD_UMAX_BE      = 0x2E,
-    ATOP_LOAD_UMIN_BE      = 0x2F,
+    ATOP_LOAD_ADD_BE   = 0x28,
+    ATOP_LOAD_CLR_BE   = 0x29,
+    ATOP_LOAD_EOR_BE   = 0x2A,
+    ATOP_LOAD_SET_BE   = 0x2B,
+    ATOP_LOAD_SMAX_BE  = 0x2C,
+    ATOP_LOAD_SMIN_BE  = 0x2D,
+    ATOP_LOAD_UMAX_BE  = 0x2E,
+    ATOP_LOAD_UMIN_BE  = 0x2F,
 
-    ATOP_SWAP              = 0x30,
-    ATOP_COMPARE           = 0x31
+    ATOP_SWAP          = 0x30,
+    ATOP_COMPARE       = 0x31,
+
+    ATOP_MASK = 0xFF
 };
 
 /** Bit fields within ATOP. */
 enum AtopBitEnum
 {
-    ATOP_ENDIAN        = 0x08,
-    ATOP_STORE         = 0x10,
-    ATOP_LOAD          = 0x20
+    ATOP_ENDIAN = 0x08,
+    ATOP_STORE  = 0x10,
+    ATOP_LOAD   = 0x20,
+
+    ATOP_BIT_MASK = 0xFF
+};
+
+/** AXI4 MMUFLOW field with the same element values as AXI4. */
+enum MmuFlowEnum
+{
+    MMU_FLOW_STALL    = 0,
+    MMU_FLOW_ATST     = 1,
+    MMU_FLOW_NO_STALL = 2,
+    MMU_FLOW_PRI      = 3,
+
+    MMU_FLOW_MASK = 0xFF
+};
+
+/** AXI4 AWTAGOP and ARTAGOP field with the same element values as AXI4. */
+enum TagOpEnum
+{
+    TAG_OP_INVALID  = 0,
+    TAG_OP_TRANSFER = 1,
+    TAG_OP_UPDATE   = 2,
+    TAG_OP_MATCH    = 3,
+
+    TAP_OP_MASK = 0xFF
 };
 
 /**
@@ -387,7 +481,47 @@ typedef TLM::BitEnumWrapper<RespEnum, RespBitEnum, uint8_t> Resp;
 typedef TLM::EnumWrapper<DomainEnum, uint8_t> Domain;
 typedef TLM::EnumWrapper<BarEnum, uint8_t> Bar;
 typedef TLM::EnumWrapper<SnoopEnum, uint8_t> Snoop;
+typedef TLM::EnumWrapper<CmoEnum, uint8_t> Cmo;
 typedef TLM::BitEnumWrapper<AtopEnum, AtopBitEnum, uint8_t> Atop;
+typedef TLM::EnumWrapper<MmuFlowEnum, uint8_t> MmuFlow;
+typedef TLM::EnumWrapper<TagOpEnum, uint8_t> TagOp;
+
+class Mpam
+{
+public:
+    uint8_t mpam_ns;
+    uint16_t part_id;
+    uint8_t perf_mon_group;
+
+    Mpam() :
+        mpam_ns(0),
+        part_id(0),
+        perf_mon_group(0)
+    {}
+
+    Mpam(uint8_t mpam_ns_, uint16_t part_id_, uint8_t perf_mon_group_) :
+        mpam_ns(mpam_ns_),
+        part_id(part_id_),
+        perf_mon_group(perf_mon_group_)
+    {}
+};
+
+class MteTag
+{
+public:
+    uint8_t tag     : 4;
+    bool tag_update : 1;
+
+    MteTag() :
+        tag(0),
+        tag_update(false)
+    {}
+
+    MteTag(uint8_t tag_, bool tag_update_) :
+        tag(tag_),
+        tag_update(tag_update_)
+    {}
+};
 
 class PayloadData;
 class PayloadPool;
@@ -464,30 +598,51 @@ public:
     uint16_t stash_nid;
     uint8_t stash_lpid;
 
-    bool unique            : 1;
-    bool stash_nid_valid   : 1;
-    bool stash_lpid_valid  : 1;
+    bool unique           : 1;
+    bool stash_nid_valid  : 1; /* STASHNIDEN. */
+    bool stash_lpid_valid : 1; /* STASHLPIDEN. */
+
+    /* All data members past this point are part of the issue H release (or later). */
+
+    bool idunq            : 1;
+    bool chunk_en         : 1;
+    bool mmu_sec_sid      : 1;
+    bool mmu_ssid_v       : 1;
+
+    /**
+     * BTAGMATCH[0].  After a TAGMATCH phase has been seen, BTAGMATCH = { 0b1, tag_match }.
+     */
+    bool tag_match        : 1;
+
+    TagOp tag_op;
+    Cmo cmo;
+    Mpam mpam;
+    MmuFlow mmu_flow;
+    uint8_t nsaid;
+
+    uint32_t mmu_sid;
+    uint32_t mmu_ssid;
+    uint64_t loop;
 
 private:
     /**
      * Create a new Payload with new payload data.
      * Used by descend and new_payload but cannot be publicly called.
      */
-    Payload(Command command, uint64_t address, Size size, uint8_t len,
-        Burst burst);
+    Payload(PayloadData* payload_data, uint64_t address, uint64_t uid);
 
     /**
      * Create a new payload sharing payload data with the parent. Used by clone
      * but cannot be publicly called.
      */
     Payload(PayloadData* payload_data_, uint64_t address_,
-        Payload* parent_);
+        Payload* parent_, uint64_t uid);
 
     /** Forbid copy construction. */
-    Payload(const Payload& other);
+    Payload(const Payload&);
 
     /** Forbid assignment. */
-    Payload& operator= (const Payload& other) { return *this; }
+    Payload& operator= (const Payload&) { return *this; }
 
     /** Forbid public delete as Payloads are reference counted. */
     void operator delete (void* p);
@@ -525,6 +680,11 @@ public:
      */
     Payload* descend(Command command, uint64_t address_, Size size,
         uint8_t len, Burst burst = BURST_INCR);
+
+    /**
+     * Get a dummy payload for non payload TLM calls (QOSACCEPT etc).
+     */
+    static Payload* get_dummy();
 
     /** Get the length of a single beat's data in bytes. */
     std::size_t get_beat_data_length() const;
@@ -578,12 +738,27 @@ public:
     /** Get the completed beat count. */
     unsigned get_beats_complete() const;
 
+    /** Get the atomic response length. */
+    std::size_t get_atomic_response_length() const;
+
+    /** Get the atmoic response beat count.*/
+    unsigned get_atomic_response_beat_count() const;
+
+    /** Get the atmoic response beat length.*/
+    std::size_t get_atomic_response_beat_length() const;
+
+    /**
+     * Get the number of skipped chunks at the start of the transaction due
+     * to unalignment.
+     */
+    unsigned get_unaligned_skipped_chunks() const;
+
     /**
      * Copy in the data for a whole read transaction from an array of
      * get_data_length() bytes. 'resp' is an optional array of per-beat
      * responses get_beat_count() Resps long.
      */
-    void read_in(const uint8_t* data, Resp* resp = NULL);
+    void read_in(const uint8_t* data, Resp* resp = nullptr);
 
     /**
      * Copy out the data for a whole read transaction to an array of
@@ -603,9 +778,9 @@ public:
      * ceil(get_data_length() / 8.0) bytes long can be passed to select which
      * bytes to write. The strobes are organized as one bit per data byte with
      * the lowest bit of byte strobe[0] corresponding to the lowest byte of
-     * data. If 'strobe' is NULL, all bytes are written.
+     * data. If 'strobe' is null, all bytes are written.
      */
-    void write_in(const uint8_t* data, const uint8_t* strobe = NULL);
+    void write_in(const uint8_t* data, const uint8_t* strobe = nullptr);
 
     /**
      * Copy out the data for a whole write transaction into an array
@@ -646,11 +821,30 @@ public:
     void read_out_beat(unsigned beat_index, uint8_t* data) const;
 
     /**
+     * Copy in the data for one chunk of a read transaction from an array
+     * 16 bytes long. The chunk response will be set to 'resp'.
+     */
+    void read_in_chunk(unsigned chunk_number, const uint8_t* data, Resp resp = RESP_OKAY);
+
+    /**
+     * Copy out the data for one chunk of a read transaction into an array
+     * 16 bytes long. Only chunks which have already been written into a payload
+     * can be read out.
+     */
+    void read_out_chunk(unsigned chunk_number, uint8_t* data) const;
+
+    /**
      * Get the response for one beat of a read transaction. The first beat of a
      * transaction has index 0. Only beats which have already been written into
      * a payload can be copied out.
      */
     Resp read_out_beat_resp(unsigned beat_index) const;
+
+    /**
+     * Get the response for one chunk of a read transaction. Only chunks which
+     * have already been written into a payload can be copied out.
+     */
+    Resp read_out_chunk_resp(unsigned chunk_number) const;
 
     /**
      * Copy in the data for one beat of a write transaction where the beat is
@@ -667,7 +861,7 @@ public:
      * corresponding to the *beat* data[0] rather than the whole transaction's
      * data.
      */
-    void write_in_beat(const uint8_t* data, const uint8_t* strobe = NULL);
+    void write_in_beat(const uint8_t* data, const uint8_t* strobe = nullptr);
 
     /**
      * Copy out the data for one beat of a write transaction to an array
@@ -710,6 +904,34 @@ public:
     void snoop_out_beat(unsigned beat_index, uint8_t* data) const;
 
     /**
+     * Copy in the data for a whole atomic transaction response from an array
+     * get_data_length() bytes long (unless it is a AtomicCompare when the
+     * response is get_data_length() / 2 bytes long ).
+     */
+    void read_in_atomic_response(const uint8_t* data);
+
+    /**
+     * Copy out the data for a whole atomic transaction response into an array
+     * get_data_length() bytes long (unless it is a AtomicCompare when the
+     * response is get_data_length() / 2 bytes long).
+     */
+    void read_out_atomic_response(uint8_t* data) const;
+
+    /**
+     * Copy in the data for a whole atomic transaction response from an array
+     * get_data_length() bytes long (unless it is a AtomicCompare when the
+     * response is get_data_length() / 2 bytes long ).
+     */
+    void read_in_atomic_response_beat(const uint8_t* data);
+
+    /**
+     * Copy out the data for a whole atomic transaction response into an array
+     * get_data_length() bytes long (unless it is a AtomicCompare when the
+     * response is get_data_length() / 2 bytes long).
+     */
+    void read_out_atomic_response_beat(unsigned beat_index, uint8_t* data) const;
+
+    /**
      * Copy in the data for one beat of a read transaction supplied in raw
      * signal level format. 'width' is the width of the data channel in the
      * signal level implementation of the AXI4 port encoded as Size. 'data' is
@@ -728,6 +950,26 @@ public:
      */
     void read_out_beat_raw(Size width, unsigned beat_index,
         uint8_t* data) const;
+
+    /**
+     * Copy in the data for one beat of a read transaction supplied in raw
+     * signal level format. 'width' is the width of the data channel in the
+     * signal level implementation of the AXI4 port encoded as Size. 'data' is
+     * an array (1 << 'width') bytes long.
+     */
+    void read_in_chunk_beat_raw(Size width, const uint8_t* data,
+        unsigned chunk_number, unsigned chunk_strobe, Resp resp = RESP_OKAY);
+
+    /**
+     * Copy out the data for one beat of a read transaction supplied in raw
+     * signal level format. 'width' is the width of the data channel in the
+     * signal level implementation of the AXI4 port encoded as Size. 'data' is
+     * an array (1 << 'width') bytes long. The first beat of a transaction has
+     * index 0.  Only beats which have already been written into a payload can
+     * be read out.
+     */
+    void read_out_chunk_beat_raw(Size width, unsigned chunk_number,
+        unsigned chunk_strobe, uint8_t* data) const;
 
     /**
      * Copy in the data for one beat of a write transaction supplied in raw
@@ -784,6 +1026,15 @@ public:
     void write_out_beat_raw_strobe(Size width, unsigned beat_index,
         uint8_t* strobe) const;
 
+    /** Get the number of MTE tags needed to be sent with the transaction. */
+    unsigned get_mte_tag_count() const;
+
+    /** Set the MTE tag at a given index. */
+    void set_mte_tag(unsigned chunk_index, MteTag tag);
+
+    /** Get the MTE tag at a given index */
+    MteTag get_mte_tag(unsigned chunk_index) const;
+
     /**
      * Get the offset from the start of a Payload of the named extension.
      * Returns 0 if the extension has not been registered.
@@ -829,9 +1080,9 @@ public:
 class PayloadExtensionManager
 {
 public:
-    virtual void create(void* ext) {}
-    virtual void destroy(void* ext) {}
-    virtual void copy(void* dst, const void* src) {}
+    virtual void create(void* /* ext */) {}
+    virtual void destroy(void* /* ext */) {}
+    virtual void copy(void* /* dst */, const void* /* src */) {}
     virtual std::size_t get_size() = 0;
 };
 
@@ -841,7 +1092,7 @@ public:
  * specified, this will be used.
  */
 template <typename Type>
-class PayloadExtensionManagerTyped:
+class PayloadExtensionManagerTyped :
     public PayloadExtensionManager
 {
 public:
@@ -849,31 +1100,31 @@ public:
     {
         Type* ext = reinterpret_cast<Type*>(vext);
         new (ext) Type();
-    };
+    }
 
     void destroy(void* vext)
     {
         Type* ext = reinterpret_cast<Type*>(vext);
         ext->~Type();
-    };
+    }
 
     void copy(void* vdst, const void* vsrc)
     {
         const Type* src = reinterpret_cast<const Type*>(vsrc);
         Type* dst = reinterpret_cast<Type*>(vdst);
         new(dst) Type(*src);
-    };
+    }
 
     std::size_t get_size()
     {
         return sizeof(Type);
-    };
+    }
 };
 
 /**
- * Extensions to AXI4::Payload. Extensions must be registered by (creating a
+ * Extensions to AXI::Payload. Extensions must be registered by (creating a
  * PayloadExtension object on the extension's type, or calling
- * get_extension_offset) before any AXI4::Payloads are made in a system.
+ * get_extension_offset) before any AXI::Payloads are made in a system.
  */
 template <typename Type, typename ManagerType = PayloadExtensionManagerTyped<Type> >
 class PayloadExtension
@@ -909,6 +1160,10 @@ public:
 };
 
 }
+
+/** Allow namespace AXI as ARM::AXI4 also covers AXI5. */
+namespace AXI = AXI4;
+
 }
 
-#endif // ARM_AXI4_PAYLOAD_H
+#endif /* ARM_AXI4_PAYLOAD_H */

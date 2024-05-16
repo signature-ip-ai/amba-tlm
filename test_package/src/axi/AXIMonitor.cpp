@@ -3,39 +3,34 @@
 #include <iostream>
 #include <iomanip>
 
-#include "Monitor.h"
+#include "AXIMonitor.h"
 
-using namespace std;
-using namespace tlm;
-using namespace sc_core;
-using namespace ARM::AXI4;
-
-tlm_sync_enum Monitor::nb_transport_fw(Payload& payload, Phase& phase)
+tlm::tlm_sync_enum AXIMonitor::nb_transport_fw(ARM::AXI::Payload& payload, ARM::AXI::Phase& phase)
 {
-    Phase prev_phase = phase;
-    tlm_sync_enum reply = master.nb_transport_fw(payload, phase);
+    ARM::AXI::Phase prev_phase = phase;
+    tlm::tlm_sync_enum reply = initiator.nb_transport_fw(payload, phase);
 
     print_payload(payload, prev_phase, reply, phase);
 
     return reply;
 }
 
-tlm_sync_enum Monitor::nb_transport_bw(Payload& payload, Phase& phase)
+tlm::tlm_sync_enum AXIMonitor::nb_transport_bw(ARM::AXI::Payload& payload, ARM::AXI::Phase& phase)
 {
-    Phase prev_phase = phase;
-    tlm_sync_enum reply = slave.nb_transport_bw(payload, phase);
+    ARM::AXI::Phase prev_phase = phase;
+    tlm::tlm_sync_enum reply = target.nb_transport_bw(payload, phase);
 
     print_payload(payload, prev_phase, reply, phase);
 
     return reply;
 }
 
-void Monitor::print_payload(Payload& payload, Phase phase,
-    tlm_sync_enum reply, Phase reply_phase)
+void AXIMonitor::print_payload(ARM::AXI::Payload& payload, ARM::AXI::Phase phase,
+    tlm::tlm_sync_enum reply, ARM::AXI::Phase /* reply_phase */)
 {
-    ostringstream stream;
+    std::ostringstream stream;
 
-    Command command = payload.get_command();
+    ARM::AXI::Command command = payload.get_command();
 
     const char* phase_name = "?";
     bool show_addr = true;
@@ -45,52 +40,52 @@ void Monitor::print_payload(Payload& payload, Phase phase,
     bool first_beat = false;
     bool last_beat = false;
 
-    bool updated = reply == TLM_UPDATED;
+    bool updated = reply == tlm::TLM_UPDATED;
 
     switch (phase)
     {
-    case PHASE_UNINITIALIZED:
+    case ARM::AXI::PHASE_UNINITIALIZED:
         phase_name = "PHASE_UNINITIALIZED";
         show_addr = false;
         break;
-    case AW_VALID:
+    case ARM::AXI::AW_VALID:
         phase_name = (updated ? "AW VALID READY" : "AW VALID -----");
         break;
-    case AW_READY:
+    case ARM::AXI::AW_READY:
         phase_name = "AW ----- READY";
         break;
-    case W_VALID:
-    case W_VALID_LAST:
+    case ARM::AXI::W_VALID:
+    case ARM::AXI::W_VALID_LAST:
         phase_name = (updated ? "W  VALID READY" : "W  VALID -----");
         inc_beat = updated;
         show_data = true;
         first_beat = true;
         last_beat = updated;
         break;
-    case W_READY:
+    case ARM::AXI::W_READY:
         inc_beat = true;
         phase_name = "W  ----- READY";
         show_data = true;
         last_beat = true;
         break;
-    case B_VALID:
+    case ARM::AXI::B_VALID:
         phase_name = (updated ? "B  VALID READY" : "B  VALID -----");
         show_resp = true;
         last_beat = updated;
         break;
-    case B_READY:
+    case ARM::AXI::B_READY:
         phase_name = "B  ----- READY";
         show_resp = true;
         last_beat = true;
         break;
-    case AR_VALID:
+    case ARM::AXI::AR_VALID:
         phase_name = (updated ? "AR VALID READY" : "AR VALID -----");
         break;
-    case AR_READY:
+    case ARM::AXI::AR_READY:
         phase_name = "AR ----- READY";
         break;
-    case R_VALID:
-    case R_VALID_LAST:
+    case ARM::AXI::R_VALID:
+    case ARM::AXI::R_VALID_LAST:
         phase_name = (updated ? "R  VALID READY" : "R  VALID -----");
         inc_beat = updated;
         show_data = true;
@@ -98,44 +93,44 @@ void Monitor::print_payload(Payload& payload, Phase phase,
         first_beat = true;
         last_beat = updated;
         break;
-    case R_READY:
+    case ARM::AXI::R_READY:
         inc_beat = true;
         phase_name = "R  ----- READY";
         show_data = true;
         show_resp = true;
         last_beat = true;
         break;
-    case AC_VALID:
+    case ARM::AXI::AC_VALID:
         phase_name = (updated ? "AC VALID READY" : "AC VALID -----");
         break;
-    case AC_READY:
+    case ARM::AXI::AC_READY:
         phase_name = "AC ----- READY";
         break;
-    case CR_VALID:
+    case ARM::AXI::CR_VALID:
         phase_name = (updated ? "CR VALID READY" : "CR VALID -----");
         break;
-    case CR_READY:
+    case ARM::AXI::CR_READY:
         phase_name = "CR ----- READY";
         break;
-    case CD_VALID:
-    case CD_VALID_LAST:
+    case ARM::AXI::CD_VALID:
+    case ARM::AXI::CD_VALID_LAST:
         phase_name = (updated ? "CD VALID READY" : "CD VALID -----");
         inc_beat = updated;
         show_data = true;
         first_beat = true;
         last_beat = updated;
         break;
-    case CD_READY:
+    case ARM::AXI::CD_READY:
         inc_beat = true;
         phase_name = "CD ----- READY";
         show_data = true;
         last_beat = true;
         break;
-    case WACK:
+    case ARM::AXI::WACK:
         phase_name = "WACK";
         show_addr = false;
         break;
-    case RACK:
+    case ARM::AXI::RACK:
         phase_name = "RACK";
         show_addr = false;
         break;
@@ -156,29 +151,31 @@ void Monitor::print_payload(Payload& payload, Phase phase,
 
     if (show_addr)
     {
-        stream << "@" << setw(12) << setfill('0') << hex
-            << payload.get_address() << dec << ' ';
+        stream << "@" << std::setw(12) << std::setfill('0') << std::hex
+            << payload.get_address() << std::dec << ' ';
 
-        if (command != COMMAND_SNOOP)
+        if (command != ARM::AXI::COMMAND_SNOOP)
         {
             const static char* burst_types[] = { "FIXED", "INCR ", "WRAP " };
-            Burst burst = payload.get_burst();
+            ARM::AXI::Burst burst = payload.get_burst();
 
             stream << payload.get_beat_count() << "x" <<
                 (8 * (1 << payload.get_size())) << "bits ";
-            stream << (burst <= BURST_WRAP ? burst_types[burst] : "?????")
+            stream << (burst <= ARM::AXI::BURST_WRAP ? burst_types[burst] : "?????")
                 << ' ';
         }
     }
 
-    const static char* resp_types[] =
-        { "OKAY  ", "EXOKAY", "SLVERR", "DECERR" };
-    Resp resp = payload.get_resp();
-
     if (show_resp)
-        stream << (resp <= RESP_DECERR ? resp_types[resp] : "??????") << ' ';
-    else
+    {
+        ARM::AXI::Resp resp = payload.get_resp();
+        const static char* resp_types[] =
+            { "OKAY  ", "EXOKAY", "SLVERR", "DECERR" };
+        stream << (resp <= ARM::AXI::RESP_DECERR ? resp_types[resp] : "??????") << ' ';
+    } else
+    {
         stream << "       ";
+    }
 
     if (show_data)
     {
@@ -191,14 +188,14 @@ void Monitor::print_payload(Payload& payload, Phase phase,
 
         switch (payload.get_command())
         {
-        case COMMAND_WRITE:
+        case ARM::AXI::COMMAND_WRITE:
             payload.write_out_beat(burst_index, beat_data);
             byte_strobe = payload.write_out_beat_strobe(burst_index);
             break;
-        case COMMAND_READ:
+        case ARM::AXI::COMMAND_READ:
             payload.read_out_beat(burst_index, beat_data);
             break;
-        case COMMAND_SNOOP:
+        case ARM::AXI::COMMAND_SNOOP:
             payload.snoop_out_beat(burst_index, beat_data);
             break;
         default:
@@ -206,18 +203,18 @@ void Monitor::print_payload(Payload& payload, Phase phase,
             break;
         }
 
-        stream << uppercase << hex;
+        stream << std::uppercase << std::hex;
         unsigned size = 1 << payload.get_size();
         for (int i = size - 1; i >= 0; i--)
         {
             if ((byte_strobe >> (i % 8)) & 1)
-                stream << setw(2) << setfill('0') << unsigned(beat_data[i]);
+                stream << std::setw(2) << std::setfill('0') << unsigned(beat_data[i]);
             else
                 stream << "XX";
             if (i != 0 && !(i % 8))
                 stream << "_";
         }
-        stream << dec;
+        stream << std::dec;
 
         /* Increment beat index on data valid. */
         if (inc_beat)
@@ -232,19 +229,19 @@ void Monitor::print_payload(Payload& payload, Phase phase,
         payload_burst_index.erase(&payload);
 
     stream << '\n';
-    cout << stream.str();
+    std::cout << stream.str();
 }
 
-Monitor::Monitor(sc_module_name name, unsigned port_width) :
-    sc_module(name),
+AXIMonitor::AXIMonitor(sc_core::sc_module_name name, unsigned port_width) :
+    sc_core::sc_module(name),
     beat_data(new uint8_t[port_width >> 3]),
-    slave("slave", *this, &Monitor::nb_transport_fw, ARM::TLM::PROTOCOL_ACE,
+    target("target", *this, &AXIMonitor::nb_transport_fw, ARM::TLM::PROTOCOL_ACE,
         port_width),
-    master("master", *this, &Monitor::nb_transport_bw, ARM::TLM::PROTOCOL_ACE,
+    initiator("initiator", *this, &AXIMonitor::nb_transport_bw, ARM::TLM::PROTOCOL_ACE,
         port_width)
 {}
 
-Monitor::~Monitor()
+AXIMonitor::~AXIMonitor()
 {
     delete[] beat_data;
 }
